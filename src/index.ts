@@ -1,1 +1,1 @@
-export * from './sender';
+export * from './IframeMessageProxy';
