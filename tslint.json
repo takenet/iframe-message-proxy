@@ -6,5 +6,21 @@
   "rules": {
     "interface-over-type-literal": false,
     "object-literal-sort-keys": false,
+    "member-ordering": [
+      true,
+      {
+        "order": [
+          "private-static-field",
+          "public-static-field",
+          "private-instance-field",
+          "public-instance-field",
+          "public-constructor",
+          "private-constructor",
+          "private-instance-method",
+          "protected-instance-method",
+          "public-instance-method"
+        ]
+      }
+    ]
   }
 }
