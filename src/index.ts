@@ -1,1 +1,1 @@
-export * from './IframeMessageProxy';
+export * from './IframeMessageProxy'
