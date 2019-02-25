@@ -6,8 +6,7 @@
   "repository": "",
   "author": {
     "name": "Samuel Martins",
-    "email": "samuelmartins.sw@gmail.com",
-    "url": ""
+    "email": "samuelmartins.sw@gmail.com"
   },
   "keywords": [
     ""
@@ -27,13 +26,18 @@
     "test": "jest",
     "coverage": "jest --coverage",
     "watch": "npm run build -- --watch",
-    "watch:test": "jest --watch"
+    "watch:test": "jest --watch",
+    "commit": "./node_modules/.bin/git-cz",
+    "semantic-release": "semantic-release --prepare && npm publish && semantic-release post"
   },
   "dependencies": {},
   "devDependencies": {
     "@types/jest": "^22.0.1",
     "@types/node": "^8.0.0",
     "coveralls": "^2.0.0",
+    "commitizen": "^2.10.1",
+    "cz-conventional-changelog": "^2.1.0",
+    "semantic-release": "^15.9.15",
     "jest": "^22.0.4",
     "prettier": "^1.5.2",
     "rimraf": "^2.0.0",
@@ -42,6 +46,21 @@
     "tslint": "^5.0.0",
     "tslint-config-prettier": "^1.1.0",
     "typescript": "^2.3.0"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  },
+  "release": {
+    "analyzeCommits": {
+      "releaseRules": [
+        {
+          "type": "build",
+          "release": "patch"
+        }
+      ]
+    }
   },
   "engines": {
     "node": ">=6.0.0"
