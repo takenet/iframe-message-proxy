@@ -1,6 +1,7 @@
 interface IMessagePayload {
   action: string
   content: any
+  caller?: string
 }
 
 interface IDeferred {
@@ -10,7 +11,7 @@ interface IDeferred {
 }
 
 interface IDeferredCache {
-  [id: string]: IDeferred;
+  [id: string]: IDeferred
 }
 
 interface IIdentifiedMessage {
@@ -21,7 +22,8 @@ interface IIdentifiedMessage {
 interface IIframeMessageProxyOptions {
   prefix?: string
   caller?: string
-  target?: Window
+  receiveWindow?: Window
+  targetWindow?: Window
   shouldHandleMessage?: ((message: IIdentifiedMessage) => boolean)
 }
 
@@ -32,14 +34,20 @@ interface ITrackingProperties {
 export class IframeMessageProxy {
   private defaultBlipEventPrefix = 'blipEvent:'
   private eventPrefix: string
+  private receiveWindow: Window
+  private pendingRequestPromises: IDeferredCache = {}
+  private handleOnReceiveMessage: (message: MessageEvent) => void
+  private validateMessage:
+    | ((message: IIdentifiedMessage) => boolean)
+    | undefined
+  private eventCaller: string
   private targetWindow: Window
-  private pendingRequestPromises: IDeferredCache = {};
-  private handleOnReceiveMessage: (message: MessageEvent) => void;
-  private validateMessage: ((message: IIdentifiedMessage) => boolean) | undefined;
 
   constructor(options: IIframeMessageProxyOptions) {
     this.eventPrefix = options.prefix || this.defaultBlipEventPrefix
-    this.targetWindow = options.target || window.parent
+    this.eventCaller = options.caller || ''
+    this.receiveWindow = options.receiveWindow || window
+    this.targetWindow = options.targetWindow || window.parent
     this.validateMessage = options.shouldHandleMessage
 
     this.handleOnReceiveMessage = this.onReceiveMessage.bind(this)
@@ -50,10 +58,12 @@ export class IframeMessageProxy {
    */
   private formatPayload(payload: IMessagePayload): IIdentifiedMessage {
     const trackingProperties = this.createTrackingProperties()
+
     return {
       message: {
-        action: `${this.eventPrefix}:${payload.action}`,
-        ...payload
+        ...payload,
+        action: `${this.eventPrefix}${payload.action}`,
+        caller: this.eventCaller
       },
       trackingProperties
     }
@@ -99,7 +109,7 @@ export class IframeMessageProxy {
    * Create local cache for deferred promise
    */
   private createPromiseCache(id: string, deferred: IDeferred): void {
-    this.pendingRequestPromises[id] = deferred;
+    this.pendingRequestPromises[id] = deferred
   }
 
   /**
@@ -110,12 +120,10 @@ export class IframeMessageProxy {
     const passDefault = ({ data }: { data: IIdentifiedMessage }): boolean => {
       const evt = data
 
-      return (evt.message
-        && evt.trackingProperties
-        && evt.trackingProperties.id) ? true : false
+      return evt.trackingProperties && evt.trackingProperties.id ? true : false
     }
 
-    const isHandleable = ({ data }: { data: IIdentifiedMessage}): boolean => {
+    const isHandleable = ({ data }: { data: IIdentifiedMessage }): boolean => {
       if (this.validateMessage) {
         return passDefault({ data }) && this.validateMessage(data)
       }
@@ -131,7 +139,7 @@ export class IframeMessageProxy {
    */
   private onReceiveMessage(evt: MessageEvent): any {
     if (!this.shouldHandleMessage(evt)) {
-      return;
+      return
     }
 
     const message: IIdentifiedMessage = evt.data
@@ -139,7 +147,7 @@ export class IframeMessageProxy {
     // Resolve pending promise if received message is a response of message sended previously
     const deferred = this.pendingRequestPromises[message.trackingProperties.id]
     if (deferred) {
-      return deferred.resolve(message);
+      return deferred.resolve(message)
     }
   }
 
@@ -147,14 +155,17 @@ export class IframeMessageProxy {
    * Start to listen message receiver events
    */
   public listen() {
-    this.targetWindow.addEventListener('message', this.handleOnReceiveMessage)
+    this.receiveWindow.addEventListener('message', this.handleOnReceiveMessage)
   }
 
   /**
    * Remove event listener that handle messages
    */
   public stopListen() {
-    this.targetWindow.removeEventListener('message', this.handleOnReceiveMessage)
+    this.receiveWindow.removeEventListener(
+      'message',
+      this.handleOnReceiveMessage
+    )
   }
 
   /**
@@ -163,10 +174,10 @@ export class IframeMessageProxy {
    * @param element
    */
   public sendMessage(payload: IMessagePayload): Promise<any> {
-    const message = this.formatPayload({ ...payload })
-    const deferred = this.createDeferred();
+    const message = this.formatPayload(payload)
+    const deferred = this.createDeferred()
 
-    this.createPromiseCache(message.trackingProperties.id, deferred);
+    this.createPromiseCache(message.trackingProperties.id, deferred)
     this.targetWindow.postMessage(message, '*')
 
     return deferred.promise
