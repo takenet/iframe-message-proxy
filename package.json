@@ -1,7 +1,7 @@
 {
-  "name": "event-bus-js",
+  "name": "iframe-message-proxy",
   "version": "0.0.0",
-  "description": "event-bus-js",
+  "description": "iframe-message-proxy",
   "license": "MIT",
   "repository": "",
   "author": {
