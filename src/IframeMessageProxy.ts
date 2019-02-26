@@ -1,13 +1,10 @@
+import { createDeferred, IDeferred } from './utils/promises'
+import { randomStr } from './utils/string'
+
 interface IMessagePayload {
   action: string
-  content: any
+  content?: any
   caller?: string
-}
-
-interface IDeferred {
-  resolve: <T>(value?: T | Promise<T>) => void
-  reject: <T>(error: T) => void
-  promise: Promise<any>
 }
 
 interface IDeferredCache {
@@ -32,24 +29,19 @@ interface ITrackingProperties {
 }
 
 export class IframeMessageProxy {
-  private defaultBlipEventPrefix = 'blipEvent:'
-  private eventPrefix: string
-  private receiveWindow: Window
+  private static defaultBlipEventPrefix = 'blipEvent:'
+  private static instance: IframeMessageProxy
+  private eventPrefix: string = IframeMessageProxy.defaultBlipEventPrefix
+  private receiveWindow: Window = window
   private pendingRequestPromises: IDeferredCache = {}
-  private handleOnReceiveMessage: (message: MessageEvent) => void
   private validateMessage:
     | ((message: IIdentifiedMessage) => boolean)
     | undefined
-  private eventCaller: string
-  private targetWindow: Window
+  private eventCaller: string = window.name
+  private targetWindow: Window = window.parent
+  private handleOnReceiveMessage: (message: MessageEvent) => void
 
-  constructor(options: IIframeMessageProxyOptions) {
-    this.eventPrefix = options.prefix || this.defaultBlipEventPrefix
-    this.eventCaller = options.caller || ''
-    this.receiveWindow = options.receiveWindow || window
-    this.targetWindow = options.targetWindow || window.parent
-    this.validateMessage = options.shouldHandleMessage
-
+  private constructor() {
     this.handleOnReceiveMessage = this.onReceiveMessage.bind(this)
   }
 
@@ -74,35 +66,8 @@ export class IframeMessageProxy {
    */
   private createTrackingProperties(): ITrackingProperties {
     return {
-      id: this.createRandomString()
+      id: randomStr()
     }
-  }
-
-  /**
-   * Utility to generate random sequence of characters used as tracking id for promises.
-   */
-  private createRandomString(): string {
-    return (Math.random() + 1).toString(36).substring(7)
-  }
-
-  /**
-   * Utility to create a deferred object
-   */
-  private createDeferred(): IDeferred {
-    const deferred: IDeferred = {
-      resolve: () => undefined,
-      reject: () => undefined,
-      promise: new Promise(() => undefined)
-    }
-
-    const promise = new Promise((resolve: () => void, reject: () => void) => {
-      deferred.resolve = resolve
-      deferred.reject = reject
-    })
-
-    deferred.promise = promise
-
-    return deferred
   }
 
   /**
@@ -137,7 +102,7 @@ export class IframeMessageProxy {
   /**
    * Handle received messages based on custom rules
    */
-  private onReceiveMessage(evt: MessageEvent): any {
+  private onReceiveMessage(evt: MessageEvent) {
     if (!this.shouldHandleMessage(evt)) {
       return
     }
@@ -149,6 +114,30 @@ export class IframeMessageProxy {
     if (deferred) {
       return deferred.resolve(message)
     }
+  }
+
+  /**
+   * Returns a singleton instance of class
+   */
+  public static getInstance(): IframeMessageProxy {
+    if (!IframeMessageProxy.instance) {
+      IframeMessageProxy.instance = new IframeMessageProxy()
+    }
+
+    return IframeMessageProxy.instance
+  }
+
+  /**
+   * Initialize proxy with options passed as param
+   */
+  public config(options?: IIframeMessageProxyOptions): IframeMessageProxy {
+    this.eventPrefix = options && options.prefix || IframeMessageProxy.defaultBlipEventPrefix
+    this.eventCaller = options && options.caller || window.name
+    this.receiveWindow = options && options.receiveWindow || window
+    this.targetWindow = options && options.targetWindow || window.parent
+    this.validateMessage = options && options.shouldHandleMessage
+
+    return this
   }
 
   /**
@@ -175,7 +164,7 @@ export class IframeMessageProxy {
    */
   public sendMessage(payload: IMessagePayload): Promise<any> {
     const message = this.formatPayload(payload)
-    const deferred = this.createDeferred()
+    const deferred = createDeferred()
 
     this.createPromiseCache(message.trackingProperties.id, deferred)
     this.targetWindow.postMessage(message, '*')
