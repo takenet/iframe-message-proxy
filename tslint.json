@@ -7,6 +7,7 @@
     "interface-over-type-literal": false,
     "object-literal-sort-keys": false,
     "semicolon": [true, "never"],
+    "typedef": [true, "call-signature", "property-declaration"],
     "member-ordering": [
       true,
       {
