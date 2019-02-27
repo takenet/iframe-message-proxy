@@ -100,18 +100,31 @@ export class IframeMessageProxy {
   }
 
   /**
+   * Chack if is error response
+   * @param message
+   */
+  private isError(message: any): boolean {
+    return message.error
+  }
+
+  /**
    * Handle received messages based on custom rules
    */
-  private onReceiveMessage(evt: MessageEvent) {
+  private onReceiveMessage(evt: MessageEvent): void {
     if (!this.shouldHandleMessage(evt)) {
       return
     }
 
-    const message: IIdentifiedMessage = evt.data
+    const message = evt.data
 
     // Resolve pending promise if received message is a response of message sended previously
     const deferred = this.pendingRequestPromises[message.trackingProperties.id]
+
     if (deferred) {
+      if (this.isError(message)) {
+        return deferred.reject(message.error)
+      }
+
       return deferred.resolve(message)
     }
   }
@@ -143,14 +156,14 @@ export class IframeMessageProxy {
   /**
    * Start to listen message receiver events
    */
-  public listen() {
+  public listen(): void {
     this.receiveWindow.addEventListener('message', this.handleOnReceiveMessage)
   }
 
   /**
    * Remove event listener that handle messages
    */
-  public stopListen() {
+  public stopListen(): void {
     this.receiveWindow.removeEventListener(
       'message',
       this.handleOnReceiveMessage
