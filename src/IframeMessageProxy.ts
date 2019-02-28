@@ -1,22 +1,22 @@
 import { createDeferred, IDeferred } from './utils/promises'
 import { randomStr } from './utils/string'
 
-interface IMessagePayload {
+export interface IMessagePayload {
   action: string
   content?: any
   caller?: string
 }
 
-interface IDeferredCache {
+export interface IDeferredCache {
   [id: string]: IDeferred
 }
 
-interface IIdentifiedMessage {
+export interface IIdentifiedMessage {
   message: IMessagePayload
   trackingProperties: ITrackingProperties
 }
 
-interface IIframeMessageProxyOptions {
+export interface IIframeMessageProxyOptions {
   prefix?: string
   caller?: string
   receiveWindow?: Window
@@ -24,7 +24,7 @@ interface IIframeMessageProxyOptions {
   shouldHandleMessage?: ((message: IIdentifiedMessage) => boolean)
 }
 
-interface ITrackingProperties {
+export interface ITrackingProperties {
   id: string
 }
 
