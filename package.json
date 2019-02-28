@@ -12,7 +12,8 @@
     ""
   ],
   "files": [
-    "lib"
+    "lib",
+    "types"
   ],
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
@@ -34,13 +35,14 @@
   "devDependencies": {
     "@types/jest": "^24.0.6",
     "@types/node": "^8.0.0",
-    "coveralls": "^2.0.0",
     "commitizen": "^2.10.1",
+    "coveralls": "^2.0.0",
     "cz-conventional-changelog": "^2.1.0",
-    "semantic-release": "^15.9.15",
     "jest": "^24.1.0",
+    "jsdom": "^13.2.0",
     "prettier": "^1.5.2",
     "rimraf": "^2.0.0",
+    "semantic-release": "^15.9.15",
     "ts-jest": "^24.0.0",
     "ts-node": "^3.2.0",
     "tslint": "^5.0.0",
@@ -66,6 +68,7 @@
     "node": ">=6.0.0"
   },
   "jest": {
+    "verbose": true,
     "transform": {
       ".(ts)": "<rootDir>/node_modules/ts-jest/preprocessor.js"
     },
@@ -74,6 +77,6 @@
       "ts",
       "js"
     ],
-    "testEnvironment": "node"
+    "testEnvironment": "jsdom"
   }
 }
