@@ -1,34 +1,99 @@
-[![Build Status](https://travis-ci.org/{{github-user-name}}/{{github-app-name}}.svg?branch=master)](https://travis-ci.org/{{github-user-name}}/{{github-app-name}}.svg?branch=master)
-[![Coverage Status](https://coveralls.io/repos/github/{{github-user-name}}/{{github-app-name}}/badge.svg?branch=master)](https://coveralls.io/github/{{github-user-name}}/{{github-app-name}}?branch=master)
-[![MIT license](http://img.shields.io/badge/license-MIT-brightgreen.svg)](http://opensource.org/licenses/MIT)
+[![Build Status](https://travis-ci.org/takenet/iframe-message-proxy.svg?branch=master)](https://travis-ci.org/takenet/iframe-message-proxy)
 
-# Using this module in other modules
+# Iframe Message Proxy
 
-Here is a quick example of how this module can be used in other modules. The [TypeScript Module Resolution Logic](https://www.typescriptlang.org/docs/handbook/module-resolution.html) makes it quite easy. The file `src/index.ts` is a [barrel](https://basarat.gitbooks.io/typescript/content/docs/tips/barrel.html) that re-exports selected exports from other files. The _package.json_ file contains `main` attribute that points to the generated `lib/index.js` file and `typings` attribute that points to the generated `lib/index.d.ts` file.
+This package is used for [BLiP platform](https://portal.blip.ai) to handle communications between micro frontends, done by iframes throught `postMessages`. Basically, we send a message and wait for response. It is possible because every message sended to parent window throught `IframeMessageProxy` has a cached promise with an ID that is resolved when current window receive a message with the same ID. Jump to **Usage** section to more details.
 
-> If you are planning to have code in multiple files (which is quite natural for a NodeJS module) that users can import, make sure you update `src/index.ts` file appropriately.
+# Installation
 
-Now assuming you have published this amazing module to _npm_ with the name `my-amazing-lib`, and installed it in the module in which you need it -
+`npm i -S iframe-message-proxy`
 
-- To use the `Greeter` class in a TypeScript file -
+# Usage
 
-```ts
-import { Greeter } from "my-amazing-lib";
+```typescript
+import { IframeMessageProxy } from 'iframe-message-proxy';
 
-const greeter = new Greeter("World!");
-greeter.greet();
+IframeMessageProxy.listen(); // Start listen for post messages
+
+// Sending messages
+IframeMessageProxy.sendMessage({
+  action: 'customAction',
+  content: 'Here is my awesome action',
+});
+```
+`sendMessage` method takes an object as param that accept these properties:
+
+| Property | Type | Required | Description |
+| -------- | ---- | -------- | ----------- |
+| `action` | `string` | `true` | Action sended to parent iframe. By default, is prefixed by `blipEvent:` |
+| `content` | `any` | `false` | Actions can have optional contents added
+| `caller` | `string` | `false` | Every message has a `caller`. By default, is used child iframe name (passed as attribute on `<iframe name="iframe-name">...`) but you can set a custom caller name too.
+
+By default, `sendMessage` method will send a `postMessage` to parent window and wait for some response, if has one.
+
+```typescript
+// Child iframe
+const action = await IframeMessageProxy.sendMessage({
+  action: 'customAction',
+  content: 'Here is my awesome action',
+});
+
+// Parent iframe
+const iframe = document.getElementById('my-iframe').contentWindow; // Get iframe caller
+
+// Handle received messages
+const handleOnReceiveMessage = msgEvt: MessageEvent => {
+  /**
+   * Assuming that window can receive many postMessage events,
+   * there is a tip to filter only messages camed from our library
+   */
+  const BLIP_EVENT_PREFIX = 'blipEvent:'
+  const shouldHandleMessage = msg =>
+    Object.keys(msg)
+      .find(k => k == 'action' && msg.action.startsWith(BLIP_EVENT_PREFIX));
+
+  if (!msgEvt.data || !message || !shouldHandleMessage(msgEvt.data.message)) {
+    return;
+  }
+
+  /**
+   * Every message has properties "message" and "trackingProperties".
+   * "trackingProperties" is used by Iframe Message Proxy to identify
+   * which promise will be resolved after send a postMessage, so
+   * if you want to send something back to caller, you have to pass
+   * trackingProperties received from child iframe.
+   */
+  const { message, trackingProperties } = msgEvt.data;
+
+  iframe.postMessage({
+    response: 'Success!',
+    trackingProperties
+  }, '*')
+}
+
+window.addEventListener('message', handleOnReceiveMessage);
+```
+## Configuring
+
+You can also configure defaults by `config` method:
+
+```typescript
+IframeMessageProxy.config({
+  prefix: 'customPrefix:',
+  eventCaller: 'jarvis',
+})
 ```
 
-- To use the `Greeter` class in a JavaScript file -
+prefix?: string
+  caller?: string
+  receiveWindow?: Window
+  targetWindow?: Window
+  shouldHandleMessage?: ((message: IIdentifiedMessage) => boolean)
 
-```js
-const Greeter = require('my-amazing-lib').Greeter;
-
-const greeter = new Greeter('World!');
-greeter.greet();
-```
-
-## Setting travis and coveralls badges
-1. Sign in to [travis](https://travis-ci.org/) and activate the build for your project.
-2. Sign in to [coveralls](https://coveralls.io/) and activate the build for your project.
-3. Replace {{github-user-name}}/{{github-app-name}} with your repo details like: "ospatil/generator-node-typescript".
+| Property | Type | Default | Description |
+| -------- | ---- | -------- | ----------- |
+| `prefix` | `string` | `blipEvent:` | Action prefix |
+| `caller` | `string` | `window.name` | Caller name |
+| `receiveWindow` | `Window` | `window` | Window that will receive postMessages responses |
+| `targetWindow` | `Window` | `window.parent` | Window that we'll request something |
+| `shouldHandleMessage` | `() => boolean` | `undefined` | You can choose what message will be parsed or not by calling a function that takes a `MessageEvent` as argument. `function(evt) { if (!evt.data) return false }`
