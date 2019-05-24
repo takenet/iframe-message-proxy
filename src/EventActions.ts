@@ -1,0 +1,16 @@
+export enum EventAction {
+  SendCommand = 'sendCommand',
+  StartLoading = 'startLoading',
+  StopLoading = 'stopLoading',
+  HeightChange = 'heightChange',
+  StateChangeSuccess = 'stateChangeSuccess',
+  ShowModal = 'showModal',
+  HideNavbar = 'hideNavbar',
+  ShowNavbar = 'showNavbar',
+  GetCurrentLanguage = 'getCurrentLanguage',
+  Toast = 'toast',
+  GetApplication = 'getApplication',
+  HasPermissions = 'hasPermissions',
+  GetPermissionsObject = 'getPermissionsObject',
+  Segment = 'segment',
+}
