@@ -73,6 +73,22 @@ const handleOnReceiveMessage = msgEvt: MessageEvent => {
 
 window.addEventListener('message', handleOnReceiveMessage);
 ```
+
+## Handling errors
+
+If you want to send an error message to child iframe, you may also add `error` property to response object. In this way, the child iframe will reject the promise instead of resolve them.
+
+```javascript
+try {
+  doSomethingWrong();
+} catch (e) {
+  iframe.postMessage({
+    error: e.toString(),
+    trackingProperties
+  }, '*')
+}
+```
+
 ## Configuring
 
 You can also configure defaults by `config` method:
