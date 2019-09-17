@@ -175,11 +175,14 @@ export class IframeMessageProxy {
    * @param payload
    * @param element
    */
-  public sendMessage(payload: IMessagePayload): Promise<any> {
+  public sendMessage(payload: IMessagePayload, trackPromise: boolean = true): Promise<any> {
     const message = this.formatPayload(payload)
     const deferred = createDeferred()
 
-    this.createPromiseCache(message.trackingProperties.id, deferred)
+    if (trackPromise) {
+      this.createPromiseCache(message.trackingProperties.id, deferred)
+    }
+
     this.targetWindow.postMessage(message, '*')
 
     return deferred.promise
