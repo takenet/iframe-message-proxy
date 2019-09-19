@@ -178,9 +178,9 @@ export class IframeMessageProxy {
    */
   public sendMessage(payload: IMessagePayload): Promise<any> {
     const message = this.formatPayload(payload)
-    const deferred = createDeferred()
+    const deferred = createDeferred() 
 
-    if (!message.message.fireAndForget) {
+    if (!payload.fireAndForget) {
       this.createPromiseCache(message.trackingProperties.id, deferred)
     }
 
