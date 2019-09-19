@@ -4,7 +4,8 @@ import { randomStr } from './utils/string'
 export interface IMessagePayload {
   action: string
   content?: any
-  caller?: string
+  caller?: string,
+  fireAndForget?: boolean
 }
 
 export interface IDeferredCache {
@@ -177,9 +178,12 @@ export class IframeMessageProxy {
    */
   public sendMessage(payload: IMessagePayload): Promise<any> {
     const message = this.formatPayload(payload)
-    const deferred = createDeferred()
+    const deferred = createDeferred() 
 
-    this.createPromiseCache(message.trackingProperties.id, deferred)
+    if (!payload.fireAndForget) {
+      this.createPromiseCache(message.trackingProperties.id, deferred)
+    }
+
     this.targetWindow.postMessage(message, '*')
 
     return deferred.promise
