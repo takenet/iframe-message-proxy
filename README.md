@@ -27,6 +27,7 @@ IframeMessageProxy.sendMessage({
 | -------- | ---- | -------- | ----------- |
 | `action` | `string` | `true` | Action sended to parent iframe. By default, is prefixed by `blipEvent:` |
 | `content` | `any` | `false` | Actions can have optional contents added
+| `fireAndForget` | `boolean` | `false` | Messages can have no response and be just a command to parent iframe
 | `caller` | `string` | `false` | Every message has a `caller`. By default, is used child iframe name (passed as attribute on `<iframe name="iframe-name">...`) but you can set a custom caller name too.
 
 By default, `sendMessage` method will send a `postMessage` to parent window and wait for some response, if has one.
