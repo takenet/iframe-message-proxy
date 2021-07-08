@@ -29,7 +29,7 @@
     "watch": "npm run build -- --watch",
     "watch:test": "jest --watch",
     "commit": "./node_modules/.bin/git-cz",
-    "semantic-release": "semantic-release --prepare && npm publish && semantic-release post"
+    "semantic-release": "semantic-release"
   },
   "dependencies": {},
   "devDependencies": {
