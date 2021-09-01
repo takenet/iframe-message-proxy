@@ -11,6 +11,16 @@ pool:
 
 variables:
 - group: npmjs-sample-variables
+- name: skipDecorator
+  value: false
+- name: sonarQubeTags
+  value: iframe-message-proxy
+- name: sonarQubeKey
+  value: iframe-message-proxy
+- name: sonarQubeName
+  value: 'Iframe Message Proxy'
+- name: framework
+  value: javascript
 
 resources:
   repositories:   
