@@ -1,56 +1,56 @@
-import { createDeferred, IDeferred } from './utils/promises'
-import { randomStr } from './utils/string'
+import { createDeferred, IDeferred } from "./utils/promises";
+import { randomStr } from "./utils/string";
 
 export interface IMessagePayload {
-  action: string
-  content?: any
-  caller?: string,
-  fireAndForget?: boolean
+  action: string;
+  content?: any;
+  caller?: string;
+  fireAndForget?: boolean;
 }
 
 export interface IDeferredCache {
-  [id: string]: IDeferred
+  [id: string]: IDeferred;
 }
 
 export interface IIdentifiedMessage {
-  message: IMessagePayload
-  trackingProperties: ITrackingProperties
+  message: IMessagePayload;
+  trackingProperties: ITrackingProperties;
 }
 
 export interface IIframeMessageProxyOptions {
-  prefix?: string
-  caller?: string
-  receiveWindow?: Window
-  targetWindow?: Window
-  shouldHandleMessage?: ((message: IIdentifiedMessage) => boolean)
+  prefix?: string;
+  caller?: string;
+  receiveWindow?: Window;
+  targetWindow?: Window;
+  shouldHandleMessage?: (message: IIdentifiedMessage) => boolean;
 }
 
 export interface ITrackingProperties {
-  id: string
+  id: string;
 }
 
 export class IframeMessageProxy {
-  private static defaultBlipEventPrefix = 'blipEvent:'
-  private static instance: IframeMessageProxy
-  private eventPrefix: string = IframeMessageProxy.defaultBlipEventPrefix
-  private receiveWindow: Window = window
-  private pendingRequestPromises: IDeferredCache = {}
+  private static defaultBlipEventPrefix = "blipEvent:";
+  private static instance: IframeMessageProxy;
+  private eventPrefix: string = IframeMessageProxy.defaultBlipEventPrefix;
+  private receiveWindow: Window = window;
+  private pendingRequestPromises: IDeferredCache = {};
   private validateMessage:
     | ((message: IIdentifiedMessage) => boolean)
-    | undefined
-  private eventCaller: string = window.name
-  private targetWindow: Window = window.parent
-  private handleOnReceiveMessage: (message: MessageEvent) => void
+    | undefined;
+  private eventCaller: string = window.name;
+  private targetWindow: Window = window.parent;
+  private handleOnReceiveMessage: (message: MessageEvent) => void;
 
   private constructor() {
-    this.handleOnReceiveMessage = this.onReceiveMessage.bind(this)
+    this.handleOnReceiveMessage = this.onReceiveMessage.bind(this);
   }
 
   /**
    * Format sended payload
    */
   private formatPayload(payload: IMessagePayload): IIdentifiedMessage {
-    const trackingProperties = this.createTrackingProperties()
+    const trackingProperties = this.createTrackingProperties();
 
     return {
       message: {
@@ -59,7 +59,7 @@ export class IframeMessageProxy {
         caller: this.eventCaller
       },
       trackingProperties
-    }
+    };
   }
 
   /**
@@ -68,14 +68,14 @@ export class IframeMessageProxy {
   private createTrackingProperties(): ITrackingProperties {
     return {
       id: randomStr()
-    }
+    };
   }
 
   /**
    * Create local cache for deferred promise
    */
   private createPromiseCache(id: string, deferred: IDeferred): void {
-    this.pendingRequestPromises[id] = deferred
+    this.pendingRequestPromises[id] = deferred;
   }
 
   /**
@@ -84,28 +84,28 @@ export class IframeMessageProxy {
    */
   private shouldHandleMessage(message: MessageEvent): boolean {
     const passDefault = ({ data }: { data: IIdentifiedMessage }): boolean => {
-      const evt = data
+      const evt = data;
 
-      return evt.trackingProperties && evt.trackingProperties.id ? true : false
-    }
+      return !!evt.trackingProperties?.id;
+    };
 
     const isHandleable = ({ data }: { data: IIdentifiedMessage }): boolean => {
       if (this.validateMessage) {
-        return passDefault({ data }) && this.validateMessage(data)
+        return passDefault({ data }) && this.validateMessage(data);
       }
 
-      return passDefault(message)
-    }
+      return passDefault(message);
+    };
 
-    return isHandleable(message)
+    return isHandleable(message);
   }
 
   /**
-   * Chack if is error response
+   * Check if is error response
    * @param message
    */
   private isError(message: any): boolean {
-    return message.error
+    return message.error;
   }
 
   /**
@@ -113,20 +113,20 @@ export class IframeMessageProxy {
    */
   private onReceiveMessage(evt: MessageEvent): void {
     if (!this.shouldHandleMessage(evt)) {
-      return
+      return;
     }
 
-    const message = evt.data
+    const message = evt.data;
 
     // Resolve pending promise if received message is a response of message sended previously
-    const deferred = this.pendingRequestPromises[message.trackingProperties.id]
+    const deferred = this.pendingRequestPromises[message.trackingProperties.id];
 
     if (deferred) {
       if (this.isError(message)) {
-        return deferred.reject(message.error)
+        return deferred.reject(message.error);
       }
 
-      return deferred.resolve(message)
+      return deferred.resolve(message);
     }
   }
 
@@ -135,30 +135,31 @@ export class IframeMessageProxy {
    */
   public static getInstance(): IframeMessageProxy {
     if (!IframeMessageProxy.instance) {
-      IframeMessageProxy.instance = new IframeMessageProxy()
+      IframeMessageProxy.instance = new IframeMessageProxy();
     }
 
-    return IframeMessageProxy.instance
+    return IframeMessageProxy.instance;
   }
 
   /**
    * Initialize proxy with options passed as param
    */
-  public config(options?: IIframeMessageProxyOptions): IframeMessageProxy {
-    this.eventPrefix = options && options.prefix || IframeMessageProxy.defaultBlipEventPrefix
-    this.eventCaller = options && options.caller || window.name
-    this.receiveWindow = options && options.receiveWindow || window
-    this.targetWindow = options && options.targetWindow || window.parent
-    this.validateMessage = options && options.shouldHandleMessage
+  public config(options?: IIframeMessageProxyOptions): this {
+    this.eventPrefix =
+      options?.prefix ?? IframeMessageProxy.defaultBlipEventPrefix;
+    this.eventCaller = options?.caller ?? window.name;
+    this.receiveWindow = options?.receiveWindow ?? window;
+    this.targetWindow = options?.targetWindow ?? window.parent;
+    this.validateMessage = options?.shouldHandleMessage;
 
-    return this
+    return this;
   }
 
   /**
    * Start to listen message receiver events
    */
   public listen(): void {
-    this.receiveWindow.addEventListener('message', this.handleOnReceiveMessage)
+    this.receiveWindow.addEventListener("message", this.handleOnReceiveMessage);
   }
 
   /**
@@ -166,9 +167,9 @@ export class IframeMessageProxy {
    */
   public stopListen(): void {
     this.receiveWindow.removeEventListener(
-      'message',
+      "message",
       this.handleOnReceiveMessage
-    )
+    );
   }
 
   /**
@@ -177,15 +178,15 @@ export class IframeMessageProxy {
    * @param element
    */
   public sendMessage(payload: IMessagePayload): Promise<any> {
-    const message = this.formatPayload(payload)
-    const deferred = createDeferred() 
+    const message = this.formatPayload(payload);
+    const deferred = createDeferred();
 
     if (!payload.fireAndForget) {
-      this.createPromiseCache(message.trackingProperties.id, deferred)
+      this.createPromiseCache(message.trackingProperties.id, deferred);
     }
 
-    this.targetWindow.postMessage(message, '*')
+    this.targetWindow.postMessage(message, "*");
 
-    return deferred.promise
+    return deferred.promise;
   }
 }
