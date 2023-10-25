@@ -20,8 +20,8 @@ export interface IIdentifiedMessage {
 export interface IIframeMessageProxyOptions {
   prefix?: string;
   caller?: string;
-  receiveWindow?: Window;
-  targetWindow?: Window;
+  receiveWindow?: Window | null;
+  targetWindow?: Window | null;
   shouldHandleMessage?: (message: IIdentifiedMessage) => boolean;
 }
 

@@ -36,7 +36,6 @@
     "commit": "./node_modules/.bin/git-cz",
     "semantic-release": "semantic-release"
   },
-  "dependencies": {},
   "devDependencies": {
     "@types/jest": "^29.5.6",
     "@types/node": "^20.8.8",
@@ -47,6 +46,7 @@
     "cz-customizable-ghooks": "^2.0.0",
     "ghooks": "^2.0.4",
     "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
     "jsdom": "^22.1.0",
     "prettier": "^3.0.3",
     "rimraf": "^5.0.5",
@@ -81,7 +81,7 @@
   "jest": {
     "verbose": true,
     "transform": {
-      ".(ts)": "<rootDir>/node_modules/ts-jest/preprocessor.js"
+      ".(ts)": "ts-jest"
     },
     "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|js)$",
     "moduleFileExtensions": [
