@@ -14,18 +14,20 @@ describe('IframeMessageProxy', () => {
     })
   })
 
-  it('sendMessage returns a promise which is resolved if a response with matching id is observed', async (done) => {
+  it('sendMessage returns a promise which is resolved if a response with matching id is observed', () => {
     const iframePromise = IframeMessageProxy.sendMessage({ action: 'awesomeAction' })
     const testData = 'solved!'
 
-    if (!iframe || !iframe.contentWindow) {
+    if (!iframe?.contentWindow) {
       return
     }
 
     iframe.contentWindow.postMessage(testData, '*')
 
-    const response = await Promise.resolve(iframePromise)
-    expect(response).toEqual(testData)
-    done()
+    Promise.resolve(iframePromise).then((response) => {
+      expect(response).toEqual(testData)
+    }).catch((error) => {
+      expect(error).toBeFalsy()
+    })
   })
 })

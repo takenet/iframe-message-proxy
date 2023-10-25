@@ -10,7 +10,6 @@
     "target": "es5",
     "strict": true,
     "outDir": "./lib",
-    "declarationDir": "./types",
     "preserveConstEnums": true,
     "removeComments": true,
     "inlineSourceMap": true,

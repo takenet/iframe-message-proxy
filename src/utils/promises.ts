@@ -1,7 +1,7 @@
 export interface IDeferred {
-  resolve: <T>(value?: T | Promise<T>) => void
-  reject: <T>(error: T) => void
-  promise: Promise<any>
+  resolve: <T>(value?: T | Promise<T>) => void;
+  reject: <T>(error: T) => void;
+  promise: Promise<any>;
 }
 
 /**
@@ -12,14 +12,16 @@ export const createDeferred = (): IDeferred => {
     resolve: () => undefined,
     reject: () => undefined,
     promise: new Promise(() => undefined)
-  }
+  };
 
-  const promise = new Promise((resolve: () => void, reject: () => void) => {
-    deferred.resolve = resolve
-    deferred.reject = reject
-  })
+  const promise = new Promise(
+    (resolve: (value: unknown) => void, reject: (reason?: any) => void) => {
+      deferred.resolve = resolve;
+      deferred.reject = reject;
+    }
+  );
 
-  deferred.promise = promise
+  deferred.promise = promise;
 
-  return deferred
-}
+  return deferred;
+};
